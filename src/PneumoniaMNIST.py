@@ -38,7 +38,6 @@ class PMnist:
             for j in range(len(img_path)):
                 img_path_temp = os.path.join(class_temp, img_path[j])
                 img = cv2.imread(img_path_temp)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
                 train_list_img.append(img)
                 train_list_label.append(i)
@@ -50,7 +49,6 @@ class PMnist:
             for j in range(len(img_path)):
                 img_path_temp = os.path.join(class_temp, img_path[j])
                 img = cv2.imread(img_path_temp)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
                 test_list_img.append(img)
                 test_list_label.append(i)
