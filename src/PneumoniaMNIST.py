@@ -31,12 +31,6 @@ class PMnist:
         class_path = os.listdir(train_path)
 
         test_path = os.path.join(self.root, "test/")
-        val_data = pd.read_csv(
-            test_path + "val_annotations.txt",
-            sep="\t",
-            header=None,
-            names=["File", "Class", "X", "Y", "H", "W"],
-        )
 
         for i in range(len(class_path)):
             class_temp = os.path.join(train_path, class_path[i])
