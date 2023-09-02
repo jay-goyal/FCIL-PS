@@ -33,9 +33,7 @@ model_old = None
 
 train_transform = transforms.Compose(
     [
-        transforms.RandomCrop((args.img_size, args.img_size), padding=4),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ColorJitter(brightness=0.24705882352941178),
+        transforms.Resize(args.img_size),
         transforms.ToTensor(),
         transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
     ]
@@ -64,11 +62,10 @@ elif args.dataset == "tiny_imagenet":
     test_dataset = train_dataset
 
 elif args.dataset == "pmnist":
-    train_dataset = PMnist(
-        "./PMnist", train_transform=train_transform, test_transform=test_transform
+    train_dataset = PMnist("pmnist", transform=train_transform, download=True)
+    test_dataset = PMnist(
+        "pmnist", test_transform=test_transform, split="test", download=True
     )
-    train_dataset.get_data()
-    test_dataset = train_dataset
 
 else:
     train_dataset = Mini_Imagenet(

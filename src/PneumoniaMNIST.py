@@ -1,68 +1,33 @@
 import numpy as np
 from PIL import Image
-import cv2
-import os
-import pandas as pd
+import medmnist
 
 
-class PMnist:
-    def __init__(self, root, train_transform=None, test_transform=None):
-        super(PMnist, self).__init__()
-        self.train_transform = train_transform
+class PMnist(medmnist.PneumoniaMNIST):
+    def __init__(
+        self,
+        root,
+        split="train",
+        transform=None,
+        target_transform=None,
+        test_transform=None,
+        target_test_transform=None,
+        download=False,
+    ):
+        super(medmnist.PneumoniaMNIST, self).__init__(
+            split,
+            root=root,
+            transform=transform,
+            target_transform=target_transform,
+            download=download,
+        )
+
+        self.target_test_transform = target_test_transform
         self.test_transform = test_transform
         self.TrainData = []
         self.TrainLabels = []
         self.TestData = []
         self.TestLabels = []
-        self.train_data = None
-        self.train_targets = None
-        self.test_data = None
-        self.test_targets = None
-        self.root = root
-
-    def get_data(self):
-        train_list_img, train_list_label, test_list_img, test_list_label = (
-            [],
-            [],
-            [],
-            [],
-        )
-        train_path = os.path.join(self.root, "train/")
-        class_path = os.listdir(train_path)
-
-        test_path = os.path.join(self.root, "test/")
-
-        for i in range(len(class_path)):
-            class_temp = os.path.join(train_path, class_path[i])
-            img_path = os.listdir(class_temp)
-            for j in range(len(img_path)):
-                img_path_temp = os.path.join(class_temp, img_path[j])
-                img = cv2.imread(img_path_temp)
-
-                train_list_img.append(img)
-                train_list_label.append(i)
-
-        ## testing image loading
-        for i in range(len(class_path)):
-            class_temp = os.path.join(test_path, class_path[i])
-            img_path = os.listdir(class_temp)
-            for j in range(len(img_path)):
-                img_path_temp = os.path.join(class_temp, img_path[j])
-                img = cv2.imread(img_path_temp)
-
-                test_list_img.append(img)
-                test_list_label.append(i)
-
-        train_list_img, test_list_img = np.asarray(train_list_img), np.asarray(
-            test_list_img
-        )
-
-        train_list_label, test_list_label = np.asarray(train_list_label), np.asarray(
-            test_list_label
-        )
-
-        self.train_data, self.test_data = train_list_img, test_list_img
-        self.train_targets, self.test_targets = train_list_label, test_list_label
 
     def concatenate(self, datas, labels):
         con_data = datas[0]
@@ -75,12 +40,11 @@ class PMnist:
     def getTestData(self, classes):
         datas, labels = [], []
         for label in range(classes[0], classes[1]):
-            data = self.test_data[np.array(self.test_targets) == label]
+            data = self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
+            data = np.repeat(np.reshape(data, (-1, 28, 28, 1)), 3, axis=3)
             datas.append(data)
             labels.append(np.full((data.shape[0]), label))
-
         self.TestData, self.TestLabels = self.concatenate(datas, labels)
-        self.TrainData, self.TrainLabels = [], []
 
     def getTrainData(self, classes, exemplar_set, exemplar_label_set):
         datas, labels = [], []
@@ -90,16 +54,35 @@ class PMnist:
             labels = [np.full((length), label) for label in exemplar_label_set]
 
         for label in classes:
-            data = self.train_data[np.array(self.train_targets) == label]
+            data = self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
+            data = np.repeat(np.reshape(data, (-1, 28, 28, 1)), 3, axis=3)
             datas.append(data)
             labels.append(np.full((data.shape[0]), label))
+        self.TrainData, self.TrainLabels = self.concatenate(datas, labels)
+
+    def getSampleData(self, classes, exemplar_set, exemplar_label_set, group):
+        datas, labels = [], []
+        if len(exemplar_set) != 0 and len(exemplar_label_set) != 0:
+            datas = [exemplar for exemplar in exemplar_set]
+            length = len(datas[0])
+            labels = [np.full((length), label) for label in exemplar_label_set]
+
+        if group == 0:
+            for label in classes:
+                data = self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
+                data = np.repeat(np.reshape(data, (-1, 28, 28, 1)), 3, axis=3)
+                datas.append(data)
+                labels.append(np.full((data.shape[0]), label))
         self.TrainData, self.TrainLabels = self.concatenate(datas, labels)
 
     def getTrainItem(self, index):
         img, target = Image.fromarray(self.TrainData[index]), self.TrainLabels[index]
 
-        if self.train_transform:
-            img = self.train_transform(img)
+        if self.transform:
+            img = self.transform(img)
+
+        if self.target_transform:
+            target = self.target_transform(target)
 
         return index, img, target
 
@@ -108,6 +91,9 @@ class PMnist:
 
         if self.test_transform:
             img = self.test_transform(img)
+
+        if self.target_test_transform:
+            target = self.target_test_transform(target)
 
         return index, img, target
 
@@ -124,4 +110,4 @@ class PMnist:
             return len(self.TestData)
 
     def get_image_class(self, label):
-        return self.train_data[np.array(self.train_targets) == label]
+        return self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
