@@ -89,6 +89,7 @@ for i in range(125):
         train_dataset,
         args.device,
         encode_model,
+        args.iid_level,
     )
     models.append(model_temp)
 
