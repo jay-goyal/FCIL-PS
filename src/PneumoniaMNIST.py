@@ -24,6 +24,8 @@ class PMnist(medmnist.PneumoniaMNIST):
 
         self.target_test_transform = target_test_transform
         self.test_transform = test_transform
+        self.data = np.repeat(np.reshape(self.imgs, (-1, 28, 28, 1)), 3, axis=3)
+        self.targets = np.ndarray.flatten(self.labels)
         self.TrainData = []
         self.TrainLabels = []
         self.TestData = []
@@ -40,8 +42,7 @@ class PMnist(medmnist.PneumoniaMNIST):
     def getTestData(self, classes):
         datas, labels = [], []
         for label in range(classes[0], classes[1]):
-            data = self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
-            data = np.repeat(np.reshape(data, (-1, 28, 28, 1)), 3, axis=3)
+            data = self.data[np.array(self.targets) == label]
             datas.append(data)
             labels.append(np.full((data.shape[0]), label))
         self.TestData, self.TestLabels = self.concatenate(datas, labels)
@@ -54,8 +55,7 @@ class PMnist(medmnist.PneumoniaMNIST):
             labels = [np.full((length), label) for label in exemplar_label_set]
 
         for label in classes:
-            data = self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
-            data = np.repeat(np.reshape(data, (-1, 28, 28, 1)), 3, axis=3)
+            data = self.data[np.array(self.targets) == label]
             datas.append(data)
             labels.append(np.full((data.shape[0]), label))
         self.TrainData, self.TrainLabels = self.concatenate(datas, labels)
@@ -69,8 +69,7 @@ class PMnist(medmnist.PneumoniaMNIST):
 
         if group == 0:
             for label in classes:
-                data = self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
-                data = np.repeat(np.reshape(data, (-1, 28, 28, 1)), 3, axis=3)
+                data = self.data[np.array(self.targets) == label]
                 datas.append(data)
                 labels.append(np.full((data.shape[0]), label))
         self.TrainData, self.TrainLabels = self.concatenate(datas, labels)
@@ -110,4 +109,4 @@ class PMnist(medmnist.PneumoniaMNIST):
             return len(self.TestData)
 
     def get_image_class(self, label):
-        return self.imgs[np.array(np.ndarray.flatten(self.labels)) == label]
+        return self.data[np.array(self.targets) == label]
