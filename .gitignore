@@ -1,4 +1,6 @@
 PMnist/
 tiny-imagenet-200/
 training_log/
+chestxray/
+*.zip
 src/__pycache__/
